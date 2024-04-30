@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -34,16 +36,17 @@ public class MainClass {
 	private static final OkHttpClient client = new OkHttpClient();
 	private static final Gson gson = new Gson();
 	private static List<Programme> list = new ArrayList<Programme>();
+	private static final String TEMP = "temp";
+	private static String EPG_FILE = "epg.xml.gz";
 
 	public static void main(String[] args) {
 		init();
 	}
 
 	public static void init() {
-		String epgFile = "epg.xml.gz";
 		boolean flag = false;
-		System.out.println("Checking EPG file");
-		File file = new File(epgFile);
+		System.out.println("Checking EPG file...");
+		File file = new File(EPG_FILE);
 		if (file.exists()) {
 			// If file was modified today, don't generate new EPG
 			// Else generate new EPG
@@ -52,20 +55,19 @@ public class MainClass {
 			String fileDate = sdf.format(new Date(lastModTime));
 			String todayDate = sdf.format(new Date());
 			if (fileDate.equals(todayDate)) {
-				System.out.println("EPG file is up to date.");
+				System.out.println("Old EPG Generated today. No need to refresh.");
 			} else {
-				System.out.println("EPG file is old.");
+				System.out.println("EPG file is old. Process started...");
 				flag = true;
 			}
 		} else {
-			System.out.println("EPG file doesn't exist");
+			System.out.println("EPG file doesn't exist. Process started...");
 			flag = true;
 		}
 
 		Runnable genepg = () -> {
-			System.out.println("Generating new EPG file... Please wait.");
 			try {
-				genXMLGz(epgFile);
+				genXMLGz(EPG_FILE);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -74,15 +76,19 @@ public class MainClass {
 		if (flag) {
 			genepg.run();
 		}
+		System.out.println("----PROCESS COMPLETED----");
 		System.exit(0);
 	}
 
 	public static void genXMLGz(String filename) throws IOException {
-		System.out.println("Generating XML");
-		deleteFile("temp");
+		System.out.println("Generating XML..");
+		deleteFile(TEMP);
+		deleteFile(EPG_FILE);
+		long start=System.currentTimeMillis();
 		genXML();
-		gzipFile("temp", "epg.xml.gz");
-		deleteFile("temp");
+		System.out.println("XML Generated in "+((System.currentTimeMillis()-start)/1000)+"s");
+		gzipFile(TEMP, EPG_FILE);
+		deleteFile(TEMP);
 	}
 
 	public static void gzipFile(String sourceFilePath, String destFilePath) {
@@ -113,7 +119,7 @@ public class MainClass {
 			}
 			throw new IOException("Unexpected code " + response);
 		}
-		
+
 		Type channelsListType = new TypeToken<ArrayList<Channel>>() {
 		}.getType();
 		String str = response.body().string();
@@ -133,13 +139,15 @@ public class MainClass {
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		
-		writeToFile("temp", "<tv version=\"\" encoding=\"\">");
-		channels=channels.stream().sorted(Comparator.comparingInt(c -> c.getChannelLanguageId() == 8 ? 0 : c.getChannel_id())).collect(Collectors.toList());
-		writeChannelToFile("temp", channels);
-		//list.stream().sorted(Comparator.comparing(Programme::getChannel_id)).collect(Collectors.toList());
-		writeProgramToFile("temp", list);
-		writeToFile("temp", "</tv>");
+
+		writeToFile(TEMP, "<tv version=\"\" encoding=\"\">");
+		channels = channels.stream()
+				.sorted(Comparator.comparingInt(c -> c.getChannelLanguageId() == 8 ? 0 : c.getChannel_id()))
+				.collect(Collectors.toList());
+		writeChannelToFile(TEMP, channels);
+		// list.stream().sorted(Comparator.comparing(Programme::getChannel_id)).collect(Collectors.toList());
+		writeProgramToFile(TEMP, list);
+		writeToFile(TEMP, "</tv>");
 
 	}
 
@@ -176,6 +184,7 @@ public class MainClass {
 			writer.write(content);
 			writer.flush();
 		} catch (IOException e) {
+			e.printStackTrace();
 			System.err.println("An error occurred while writing to the file: " + e.getMessage());
 		}
 	}
@@ -183,8 +192,8 @@ public class MainClass {
 	public synchronized static void writeChannelToFile(String filename, List<Channel> content) {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) {
 			for (Channel str : content) {
-				writer.write("<channel id=\"" + str.getChannel_id() + "\">");
-				writer.write("<display-name>" + str.getChannel_name() + "</display-name>");
+				writer.write("<channel id=\"" + StringEscapeUtils.escapeXml11(String.valueOf(str.getChannel_id())) + "\">");
+				writer.write("<display-name>" + StringEscapeUtils.escapeXml11(str.getChannel_name()) + "</display-name>");
 				writer.write("</channel>");
 			}
 			writer.flush();
@@ -200,8 +209,8 @@ public class MainClass {
 			for (Programme str : content) {
 				writer.write("<programme channel=\"" + str.getChannel_id() + "\" start=\"" + str.getStartEpoch()
 						+ "\" stop=\"" + str.getEndEpoch() + "\">");
-				writer.write("<title lang=\"en\">" + str.getShowname() + "</title>");
-				writer.write("<desc lang=\"en\">" + str.getDescription().replaceAll("\n", " ").trim() + "</desc>");
+				writer.write("<title lang=\"en\">" + StringEscapeUtils.escapeXml11(str.getShowname()) + "</title>");
+				writer.write("<desc lang=\"en\">" + StringEscapeUtils.escapeXml11(str.getDescription().trim()) + "</desc>");
 				writer.write("<icon src=\"" + str.getEpisodePoster() + "\"/></programme>");
 			}
 			writer.flush();
@@ -216,9 +225,7 @@ public class MainClass {
 		File file = new File(filePath);
 
 		if (file.exists()) {
-			if (file.delete()) {
-				System.out.println("File deleted successfully: " + filePath);
-			} else {
+			if (!file.delete()) {
 				System.err.println("Failed to delete the file: " + filePath);
 			}
 		}
