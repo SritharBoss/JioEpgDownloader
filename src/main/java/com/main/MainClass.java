@@ -38,22 +38,31 @@ public class MainClass {
 	private static List<Programme> list = new ArrayList<Programme>();
 	private static final String TEMP = "temp";
 	private static String EPG_FILE = "epg.xml.gz";
+	private static int threadCount=5;
 
 	public static void main(String[] args) {
+		if(args.length>=1) {
+			try {
+				threadCount=Integer.valueOf(args[0]);
+			} catch (NumberFormatException e) {
+				threadCount=3;
+			}
+		}
 		init();
 	}
 
 	public static void init() {
 		boolean flag = false;
-		System.out.println("Checking EPG file...");
 		File file = new File(EPG_FILE);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		String todayDate = sdf.format(new Date());
+		System.out.println("---PROCESS STARTED---");
+		System.out.println("TODAY :: "+todayDate);
 		if (file.exists()) {
 			// If file was modified today, don't generate new EPG
 			// Else generate new EPG
 			long lastModTime = file.lastModified();
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			String fileDate = sdf.format(new Date(lastModTime));
-			String todayDate = sdf.format(new Date());
 			if (fileDate.equals(todayDate)) {
 				System.out.println("Old EPG Generated today. No need to refresh.");
 			} else {
@@ -76,7 +85,7 @@ public class MainClass {
 		if (flag) {
 			genepg.run();
 		}
-		System.out.println("----PROCESS COMPLETED----");
+		System.out.println("---PROCESS STARTED---");
 		System.exit(0);
 	}
 
@@ -127,7 +136,7 @@ public class MainClass {
 		List<Channel> channels = gson.fromJson(json.get("result").getAsJsonArray(), channelsListType);
 
 		// Use a fixed thread pool to fetch EPG data concurrently
-		ExecutorService executor = Executors.newFixedThreadPool(20);
+		ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
 		for (Channel channel : channels) {
 			executor.execute(() -> fetchEPG(channel));
