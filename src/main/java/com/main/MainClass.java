@@ -121,6 +121,8 @@ public class MainClass {
 				return;
 			}
 			System.err.println(response);
+			System.err.println(response.body().string());
+			request.headers().forEach(System.err::println);
 			throw new IOException("Unexpected code " + response);
 		}
 		writeToFile(EPG_XML, "<tv version=\"\" encoding=\"\">");
@@ -173,6 +175,8 @@ public class MainClass {
 						return;
 					}
 					System.err.println(response);
+					System.err.println(response.body().string());
+					request.headers().forEach(System.err::println);
 					throw new IOException("Unexpected code " + response);
 				}
 				String str = response.body().string();
