@@ -21,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      HTTP_PROXY: http://31.206.38.48:37630
-      HTTPS_PROXY: http://31.206.38.48:37630
+      HTTP_PROXY: http://103.85.114.240:8080
+      HTTPS_PROXY: http://103.85.114.240:8080
     
     steps:
     - uses: actions/checkout@v4
