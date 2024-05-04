@@ -31,6 +31,7 @@ jobs:
     
     - name: Build and run Java project
       run: |
+        curl https://jiotv.data.cdn.jio.com/apis/v3.0/getMobileChannelList/get/\?os\=android\&devicetype\=phone\&usertype\=tvYR7NSNn7rymo3F
         mvn clean install
         java -jar target/JioEpg-0.0.1-SNAPSHOT-jar-with-dependencies.jar 5
 
