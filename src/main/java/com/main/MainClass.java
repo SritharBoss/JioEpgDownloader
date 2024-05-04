@@ -114,7 +114,7 @@ public class MainClass {
 
 	public static void genXML() throws IOException {
 		// Fetch channels data
-		Request request = new Request.Builder().url(CHANNEL_URL).build();
+		Request request = new Request.Builder().url(CHANNEL_URL).header("User-Agent", "okhttp/4.2.2").build();
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) {
 			if (response.code() == 404) {
