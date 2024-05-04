@@ -19,10 +19,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    env:
-      HTTP_PROXY: http://103.85.114.240:8080
-      HTTPS_PROXY: http://103.85.114.240:8080
     
     steps:
     - uses: actions/checkout@v4
@@ -36,7 +32,7 @@ jobs:
     - name: Build and run Java project
       run: |
         mvn clean install
-        java -jar target/JioEpg-0.0.1-SNAPSHOT-jar-with-dependencies.jar false
+        java -jar target/JioEpg-0.0.1-SNAPSHOT-jar-with-dependencies.jar 5
 
     - name: Commit generated file
       run: |
