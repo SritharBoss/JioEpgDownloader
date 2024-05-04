@@ -171,6 +171,7 @@ public class MainClass {
 					if (response.code() == 404) {
 						return;
 					}
+					System.err.println(response);
 					throw new IOException("Unexpected code " + response);
 				}
 				String str = response.body().string();
