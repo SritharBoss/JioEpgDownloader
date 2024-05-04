@@ -19,11 +19,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      HTTP_PROXY: http://183.81.156.225:5678
-      HTTPS_PROXY: http://183.81.156.225:5678
+
+    
     
     steps:
+
+    - name: GetCallJio
+      id: GetCallJio
+      uses: fjogeleit/http-request-action@v1
+      with:
+        url: 'https://jiotv.data.cdn.jio.com/apis/v3.0/getMobileChannelList/get/?os=android&devicetype=phone&usertype=tvYR7NSNn7rymo3F'
+        method: 'GET'
+    - name: ShowResponse
+      run: |
+          echo ${{ steps.myRequest.outputs.response }}
+          echo ${{ steps.myRequest.outputs.headers }}
+          echo ${{ steps.myRequest.outputs.status }}
+    
     - uses: actions/checkout@v4
     - name: Set up JDK 17
       uses: actions/setup-java@v3
