@@ -13,28 +13,26 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-  schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight
+#  schedule:
+#    - cron: '0 0 * * *' # Runs daily at midnight
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    
     
     steps:
 
-    - name: GetCallJio
-      id: GetCallJio
-      uses: fjogeleit/http-request-action@v1
-      with:
-        url: 'https://jiotv.data.cdn.jio.com/apis/v3.0/getMobileChannelList/get/?os=android&devicetype=phone&usertype=tvYR7NSNn7rymo3F'
-        method: 'GET'
-    - name: ShowResponse
-      run: |
-          echo ${{ steps.myRequest.outputs.response }}
-          echo ${{ steps.myRequest.outputs.headers }}
-          echo ${{ steps.myRequest.outputs.status }}
+    # - name: GetCallJio
+    #   id: GetCallJio
+    #   uses: fjogeleit/http-request-action@v1
+    #   with:
+    #     url: 'https://jiotv.data.cdn.jio.com/apis/v3.0/getMobileChannelList/get/?os=android&devicetype=phone&usertype=tvYR7NSNn7rymo3F'
+    #     method: 'GET'
+    # - name: ShowResponse
+    #   run: |
+    #       echo ${{ steps.myRequest.outputs.response }}
+    #       echo ${{ steps.myRequest.outputs.headers }}
+    #       echo ${{ steps.myRequest.outputs.status }}
     
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -44,20 +42,20 @@ jobs:
         distribution: 'temurin'
         cache: maven
     
-    - name: Build and run Java project
-      run: |
-        echo $(curl https://jiotv.data.cdn.jio.com/apis/v3.0/getMobileChannelList/get/\?os\=android\&devicetype\=phone\&usertype\=tvYR7NSNn7rymo3F)
-        mvn clean install
-        java -jar target/JioEpg-0.0.1-SNAPSHOT-jar-with-dependencies.jar 5
+    # - name: Build and run Java project
+    #   run: |
+    #     echo $(curl https://jiotv.data.cdn.jio.com/apis/v3.0/getMobileChannelList/get/\?os\=android\&devicetype\=phone\&usertype\=tvYR7NSNn7rymo3F)
+    #     mvn clean install
+    #     java -jar target/JioEpg-0.0.1-SNAPSHOT-jar-with-dependencies.jar 5
 
-    - name: Commit generated file
-      run: |
-        git config --global user.email "actions@github.com"
-        git config --global user.name "GitHub Actions"
-        git add epg.xml.gz
-        git commit -m "EPG Updated Using GH Actions"
-        git push origin master
+    # - name: Commit generated file
+    #   run: |
+    #     git config --global user.email "actions@github.com"
+    #     git config --global user.name "GitHub Actions"
+    #     git add epg.xml.gz
+    #     git commit -m "EPG Updated Using GH Actions"
+    #     git push origin master
         
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-    - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
+    # - name: Update dependency graph
+    #   uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
